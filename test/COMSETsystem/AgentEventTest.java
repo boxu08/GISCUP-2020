@@ -62,7 +62,7 @@ public class AgentEventTest {
 
         // Verify that next AgentEvent will trigger when reaching the end of road2
         assertEquals(AgentEvent.State.INTERSECTION_REACHED, nextEvent.state);
-        assertEquals(testMap.roadFrom2to3, nextEvent.loc.road);
+        assertEquals(testMap.roadFrom2to3, nextEvent.loc.link.road);
         assertEquals(TRIGGER_TIME + testMap.roadFrom2to3.travelTime, nextEvent.time);
     }
 
@@ -88,7 +88,7 @@ public class AgentEventTest {
 
         assertEquals(AgentEvent.State.PICKING_UP, pickUpEvent.state);
         assertEquals(TRIGGER_TIME + testMap.roadFrom2to3.travelTime/2, pickUpEvent.time);
-        assertEquals(testMap.roadFrom2to3, pickUpEvent.loc.road);
+        assertEquals(testMap.roadFrom2to3, pickUpEvent.loc.link.road);
 
         // Trigger pickup Event
         AgentEvent nextEvent = (AgentEvent) pickUpEvent.trigger();
@@ -96,7 +96,7 @@ public class AgentEventTest {
         // Verify that event will trigger when it hits the end of the road that customer was waiting
         assertEquals(AgentEvent.State.INTERSECTION_REACHED, nextEvent.state);
         assertEquals(TRIGGER_TIME + testMap.roadFrom2to3.travelTime, nextEvent.time);
-        assertEquals(testMap.roadFrom2to3, nextEvent.loc.road);
+        assertEquals(testMap.roadFrom2to3, nextEvent.loc.link.road);
         assertTrue(nextEvent.isPickup);
         assertEquals(TRIGGER_TIME + pickUpLocation.travelTimeFromStartIntersection, customer.pickupTime);
 
@@ -114,8 +114,8 @@ public class AgentEventTest {
         when(locationOnRoad.toString()).thenReturn("123,45t");
 
         ResourceEvent resource = new ResourceEvent(
-                new LocationOnRoad(testMap.roadFrom2to3, 20L),
-                new LocationOnRoad(testMap.roadFrom2to3, 10L),
+                new DistanceLocationOnLink(testMap.roadFrom2to3, 20L),
+                new DistanceLocationOnLink(testMap.roadFrom2to3, 10L),
                 100L,
                 1000L,
                 mockSimulator,
