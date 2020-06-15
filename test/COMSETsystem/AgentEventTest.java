@@ -46,8 +46,8 @@ public class AgentEventTest {
     @Test
     public void testTrigger_cruising() throws Exception {
         // Construction agent reaching intersection2
-        LocationOnRoad locAtReachedIntersection = new LocationOnRoad(testMap.roadFrom1to2,
-                testMap.roadFrom1to2.travelTime);
+        DistanceLocationOnLink locAtReachedIntersection = new DistanceLocationOnLink(testMap.link1to2,
+                testMap.link1to2.length);
 
         AgentEvent agentEvent = new AgentEvent(locAtReachedIntersection,
                 TRIGGER_TIME, mockSimulator, mockFleetManager);
@@ -69,16 +69,16 @@ public class AgentEventTest {
     @Test
     public void testTrigger_arrivingAtPickup() throws Exception {
         // Create a Resource to be picked up half way down road.
-        LocationOnRoad pickUpLocation = new LocationOnRoad(testMap.roadFrom2to3,
-                testMap.roadFrom2to3.travelTime/2);
-        LocationOnRoad dropOffLocation = new LocationOnRoad(testMap.roadFrom4to5,
-                testMap.roadFrom4to5.travelTime/2);
+        DistanceLocationOnLink pickUpLocation = new DistanceLocationOnLink(testMap.link2to3,
+                testMap.link2to3.length/2);
+        DistanceLocationOnLink dropOffLocation = new DistanceLocationOnLink(testMap.link4to5,
+                testMap.link4to5.length/2);
         ResourceEvent customer = new ResourceEvent(pickUpLocation, dropOffLocation,
                 3600, 0, mockSimulator, mockFleetManager, mockAssignmentManager);
 
         // Create an agentEvent that has a pickup reaching intersection2
-        LocationOnRoad locAtReachedIntersection = new LocationOnRoad(testMap.roadFrom1to2,
-                testMap.roadFrom1to2.travelTime);
+        DistanceLocationOnLink locAtReachedIntersection = new DistanceLocationOnLink(testMap.link1to2,
+                testMap.link1to2.length);
         AgentEvent agentEvent = new AgentEvent(locAtReachedIntersection, TRIGGER_TIME,
                 mockSimulator, mockFleetManager);
         agentEvent.assignTo(customer);
@@ -98,7 +98,8 @@ public class AgentEventTest {
         assertEquals(TRIGGER_TIME + testMap.roadFrom2to3.travelTime, nextEvent.time);
         assertEquals(testMap.roadFrom2to3, nextEvent.loc.link.road);
         assertTrue(nextEvent.isPickup);
-        assertEquals(TRIGGER_TIME + pickUpLocation.travelTimeFromStartIntersection, customer.pickupTime);
+        long travelTimeFromStartIntersection = (long)(pickUpLocation.distanceFromStartVertex / pickUpLocation.link.speed);
+        assertEquals(TRIGGER_TIME + travelTimeFromStartIntersection, customer.pickupTime);
 
         // Validate simulation statistics
         assertEquals(testMap.roadFrom2to3.travelTime/2, mockSimulator.totalAgentSearchTime);
@@ -110,12 +111,12 @@ public class AgentEventTest {
 
     @Test
     public void testNavigate_withPickUp() throws Exception {
-        LocationOnRoad locationOnRoad = spy(new LocationOnRoad(testMap.roadFrom1to2, testMap.roadFrom1to2.travelTime));
+        DistanceLocationOnLink locationOnRoad = spy(new DistanceLocationOnLink(testMap.link1to2, testMap.link1to2.length));
         when(locationOnRoad.toString()).thenReturn("123,45t");
 
         ResourceEvent resource = new ResourceEvent(
-                new DistanceLocationOnLink(testMap.roadFrom2to3, 20L),
-                new DistanceLocationOnLink(testMap.roadFrom2to3, 10L),
+                new DistanceLocationOnLink(testMap.link2to3, 600L),
+                new DistanceLocationOnLink(testMap.link2to3, 1200L),
                 100L,
                 1000L,
                 mockSimulator,
