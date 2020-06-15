@@ -35,7 +35,7 @@ public class AgentEvent extends Event {
 	}
 
 	// The location at which the event is triggered.
-	LocationOnRoad loc;
+	DistanceLocationOnLink loc;
 
 	ResourceEvent assignedResource;
 
@@ -54,8 +54,8 @@ public class AgentEvent extends Event {
 	 *
 	 * @param loc this agent's location when it becomes empty.
 	 */
-	public AgentEvent(LocationOnRoad loc, long startedSearch, Simulator simulator, FleetManager fleetManager) {
-		super(startedSearch + loc.road.travelTime - loc.travelTimeFromStartIntersection, simulator, fleetManager);
+	public AgentEvent(DistanceLocationOnLink loc, long startedSearch, Simulator simulator, FleetManager fleetManager) {
+		super(startedSearch + (long) simulator.trafficPattern.roadTravelTimeToEndIntersection(startedSearch, loc), simulator, fleetManager);
 		this.loc = loc;
 		this.startSearchTime = startedSearch;
 	}
@@ -94,16 +94,19 @@ public class AgentEvent extends Event {
 	}
 
 	void navigate() throws Exception {
-		assert loc.travelTimeFromStartIntersection == loc.road.travelTime : "Agent not at an intersection.";
+		// TODO: assert with DistanceLocationOnRoad
+		//assert loc.travelTimeFromStartIntersection == loc.road.travelTime : "Agent not at an intersection.";
 
 		if (isArrivingPickupLoc()) {
-			long nextEventTime = time + assignedResource.pickupLoc.travelTimeFromStartIntersection;
+			long travelTimeToPickupLoc = (long)simulator.trafficPattern.roadTravelTimeFromStartIntersection(time, assignedResource.pickupLoc);
+			long nextEventTime = time + travelTimeToPickupLoc;
 			update(nextEventTime, assignedResource.pickupLoc, State.PICKING_UP);
 			return;
 		}
 
 		if (isArrivingDropOffLoc()) {
-			long nextEventTime = time + assignedResource.dropoffLoc.travelTimeFromStartIntersection;
+			long travelTimeToDropoffLoc = (long)simulator.trafficPattern.roadTravelTimeFromStartIntersection(time, assignedResource.dropoffLoc);
+			long nextEventTime = time + travelTimeToDropoffLoc;
 			update(nextEventTime, assignedResource.dropoffLoc, State.DROPPING_OFF);
 			return;
 		}
@@ -120,25 +123,26 @@ public class AgentEvent extends Event {
 			throw new Exception("agent.move() did not return a next location");
 		}
 
-		if (!loc.road.to.isAdjacent(nextIntersection)) {
+		if (!loc.link.road.to.isAdjacent(nextIntersection)) {
 			throw new Exception("move not made to an adjacent location");
 		}
 
 		// set location and time of the next trigger
-		Road nextRoad = loc.road.to.roadTo(nextIntersection);
-		LocationOnRoad nextLocation = new LocationOnRoad(nextRoad, nextRoad.travelTime);
-		update(time + nextRoad.travelTime, nextLocation, State.INTERSECTION_REACHED);
+		Road nextRoad = loc.link.road.to.roadTo(nextIntersection);
+		DistanceLocationOnLink nextLocation = new DistanceLocationOnLink(nextRoad.links.get(nextRoad.links.size()-1), nextRoad.length);
+		long travelTimeToNextLocation = (long)(simulator.trafficPattern.roadTravelTimeToEndIntersection(time, nextLocation));
+		update(time + travelTimeToNextLocation, nextLocation, State.INTERSECTION_REACHED);
 
 		Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Move to " + nextRoad.to, this);
 		Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Next trigger time = " + time, this);
 	}
 
 	private boolean isArrivingPickupLoc() {
-		return !isPickup && assignedResource != null && assignedResource.pickupLoc.road.from.equals(loc.road.to);
+		return !isPickup && assignedResource != null && assignedResource.pickupLoc.link.road.from.equals(loc.link.road.to);
 	}
 
 	private boolean isArrivingDropOffLoc() {
-		return isPickup && assignedResource != null && assignedResource.dropoffLoc.road.from.equals(loc.road.to);
+		return isPickup && assignedResource != null && assignedResource.dropoffLoc.link.road.from.equals(loc.link.road.to);
 	}
 
 	/*
@@ -160,8 +164,9 @@ public class AgentEvent extends Event {
 		assignedResource.pickup(this, time);
 
 		// move to the end intersection of the current road
-		long nextEventTime = time + loc.road.travelTime - loc.travelTimeFromStartIntersection;
-		LocationOnRoad nextLoc = new LocationOnRoad(loc.road, loc.road.travelTime);
+		long travelTimeToEndIntersection = (long)(simulator.trafficPattern.roadTravelTimeToEndIntersection(time, loc));
+		long nextEventTime = time + travelTimeToEndIntersection;
+		DistanceLocationOnLink nextLoc = new DistanceLocationOnLink(loc.link.road.links.get(loc.link.road.links.size()-1), loc.link.length);
 		update(nextEventTime, nextLoc, State.INTERSECTION_REACHED);
 	}
 
@@ -177,12 +182,13 @@ public class AgentEvent extends Event {
 		assignedResource = null;
 
 		// move to the end intersection of the current road
-		long nextEventTime = time + loc.road.travelTime - loc.travelTimeFromStartIntersection;
-		LocationOnRoad nextLoc = new LocationOnRoad(loc.road, loc.road.travelTime);
+		long travelTimeToEndIntersection = (long)(simulator.trafficPattern.roadTravelTimeToEndIntersection(time, loc));
+		long nextEventTime = time + travelTimeToEndIntersection;
+		DistanceLocationOnLink nextLoc = new DistanceLocationOnLink(loc.link.road.links.get(loc.link.road.links.size()-1), loc.link.length);
 		update(nextEventTime, nextLoc, State.INTERSECTION_REACHED);
 	}
 
-	private void update(long time, LocationOnRoad loc, State state) {
+	private void update(long time, DistanceLocationOnLink loc, State state) {
 		this.time = time;
 		this.loc = loc;
 		this.state = state;

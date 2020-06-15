@@ -23,9 +23,9 @@ public class ResourceEvent extends Event {
 	}
 
 	// The location at which the resource is introduced.
-	public final LocationOnRoad pickupLoc;
+	public final DistanceLocationOnLink pickupLoc;
 	// The destination of the resource.
-	public final LocationOnRoad dropoffLoc;
+	public final DistanceLocationOnLink dropoffLoc;
 
 	// The time at which the resource is introduced
 	final long availableTime;
@@ -41,9 +41,6 @@ public class ResourceEvent extends Event {
 
 	State state;
 
-	// The shortest travel time from pickupLoc to dropoffLoc
-	public long tripTime;
-
 	/**
 	 * Constructor for class ResourceEvent.
 	 *
@@ -52,13 +49,12 @@ public class ResourceEvent extends Event {
 	 * @param dropoffLoc this resource's destination location.
 	 * @param simulator the simulator object.
 	 */
-	public ResourceEvent(LocationOnRoad pickupLoc, LocationOnRoad dropoffLoc, long availableTime, long tripTime, Simulator simulator, FleetManager fleetManager, AssignmentManager assignmentManager) {
+	public ResourceEvent(DistanceLocationOnLink pickupLoc, DistanceLocationOnLink dropoffLoc, long availableTime, Simulator simulator, FleetManager fleetManager, AssignmentManager assignmentManager) {
 		super(availableTime, simulator, fleetManager);
 		this.pickupLoc = pickupLoc;
 		this.dropoffLoc = dropoffLoc;
 		this.availableTime = availableTime;
 		this.expirationTime = availableTime + simulator.ResourceMaximumLifeTime;
-		this.tripTime = tripTime;
 		this.state = State.AVAILABLE;
 		this.assignmentManager = assignmentManager;
 	}
@@ -72,13 +68,12 @@ public class ResourceEvent extends Event {
 	 * @param tripTime the time it takes to go from pickUpLoc and dropoffLoc
 	 * @param simulator the simulator object.
 	 */
-	protected ResourceEvent(LocationOnRoad pickupLoc, LocationOnRoad dropoffLoc, long availableTime, long tripTime, Simulator simulator) {
+	protected ResourceEvent(DistanceLocationOnLink pickupLoc, DistanceLocationOnLink dropoffLoc, long availableTime, long tripTime, Simulator simulator) {
 		super(availableTime);
 		this.pickupLoc = pickupLoc;
 		this.dropoffLoc = dropoffLoc;
 		this.availableTime = availableTime;
 		this.expirationTime = availableTime + simulator.ResourceMaximumLifeTime;
-		this.tripTime = tripTime;
 	}
 
 	/**

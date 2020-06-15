@@ -108,6 +108,15 @@ public class Simulator {
 
 	protected FleetManager fleetManager;
 
+	// Traffic pattern epoch in seconds
+	public long trafficPatternEpoch;
+
+	// Traffic pattern step in seconds
+	public long trafficPatternStep;
+
+	// Traffic pattern
+	public TrafficPattern trafficPattern;
+
 	/**
 	 * Constructor of the class Main. This is made such that the type of
 	 * agent/resourceAnalyzer used is not hardcoded and the users can choose
@@ -135,10 +144,11 @@ public class Simulator {
 	 * @param boundingPolygonKMLFile The KML file defining a bounding polygon of the simulated area
 	 * @param maximumLifeTime The maximum life time of a resource
 	 * @param agentPlacementRandomSeed The see for the random number of generator when placing the agents
-	 * @param speedReduction The speed reduction to accommodate traffic jams and turn delays
+	 * @param trafficPatternEpoch The epoch time length of traffic pattern
+	 * @param trafficPatternEpoch The epoch moving step of traffic pattern
 	 */
 	public void configure(String mapJSONFile, String resourceFile, Long totalAgents, String boundingPolygonKMLFile,
-						  Long maximumLifeTime, long agentPlacementRandomSeed, double speedReduction) {
+						  Long maximumLifeTime, long agentPlacementRandomSeed, long trafficPatternEpoch, long trafficPatternStep) {
 
 		this.mapJSONFile = mapJSONFile;
 
@@ -150,7 +160,11 @@ public class Simulator {
 
 		this.resourceFile = resourceFile;
 
-		MapCreator creator = new MapCreator(this.mapJSONFile, this.boundingPolygonKMLFile, speedReduction);
+		this.trafficPatternEpoch = trafficPatternEpoch;
+
+		this.trafficPatternStep = trafficPatternStep;
+
+		MapCreator creator = new MapCreator(this.mapJSONFile, this.boundingPolygonKMLFile);
 		System.out.println("Creating the map...");
 
 		creator.createMap();
@@ -227,7 +241,7 @@ public class Simulator {
 	 * @param agentLoc  Location of agent.
 	 * @return PickUp instance with ResourceAgent and time of pickup, or empty PickUp
 	 */
-	public PickUp FindEarliestPickup(final LocationOnRoad agentLoc) {
+	public PickUp FindEarliestPickup(final DistanceLocationOnLink agentLoc) {
 		// Check if there are resources waiting to be picked up by an agent.
 		if (waitingResources.size() > 0) {
 			ResourceEvent resource = null;
@@ -503,11 +517,15 @@ public class Simulator {
 	 * @param locationOnRoad the location to make a copy for
 	 * @return an agent copy of the location 
 	 */
-	public LocationOnRoad agentCopy(LocationOnRoad locationOnRoad) {
+	public DistanceLocationOnLink agentCopy(DistanceLocationOnLink locationOnRoad) {
+		// TODO: make a real copy. For now just use the original copy
+		return locationOnRoad;
+/*
 		Intersection from = mapForAgents.intersections().get(locationOnRoad.road.from.id);
 		Intersection to = mapForAgents.intersections().get(locationOnRoad.road.to.id);
 		Road roadAgentCopy = from.roadsMapFrom.get(to);
 		return new LocationOnRoad(roadAgentCopy, locationOnRoad.travelTimeFromStartIntersection);
+*/
 	}
 
 	public FleetManager createFleetManager() {
